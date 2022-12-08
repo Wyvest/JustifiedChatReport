@@ -1,34 +1,34 @@
 package net.wyvest.jcr.command;
 
-import gg.essential.api.EssentialAPI;
-import gg.essential.api.commands.Command;
-import gg.essential.api.commands.Greedy;
-import gg.essential.api.commands.SubCommand;
-import gg.essential.universal.ChatColor;
+import cc.polyfrost.oneconfig.libs.universal.ChatColor;
+import cc.polyfrost.oneconfig.libs.universal.UChat;
+import cc.polyfrost.oneconfig.utils.commands.annotations.*;
 import net.wyvest.jcr.JCR;
 
-@SuppressWarnings("unused")
-public class JCRCommand extends Command {
-    public JCRCommand() {
-        super(JCR.ID, true);
+@Command(JCR.ID)
+public class JCRCommand {
+
+    @Main
+    private void main() {
+        JCR.instance.config.openGui();
     }
 
-    @SubCommand(value = "toggle", description = "Toggle the mod.")
-    public void toggle() {
-        JCR.instance.config.enabled = !JCR.instance.config.enabled;
-        JCR.instance.writeData();
-        EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "JCR was toggled " + (JCR.instance.config.enabled ? ChatColor.GREEN + "on" : ChatColor.RED + "off") + ".");
+    @SubCommand(description = "Print the values of the config.")
+    private static void print() {
+        UChat.chat(ChatColor.BLUE + "Whole Triggers: ");
+        UChat.chat(ChatColor.BLUE + "Starts: " + ChatColor.LIGHT_PURPLE + JCR.instance.config.startsWith);
+        UChat.chat(ChatColor.BLUE + "Ends: " + ChatColor.LIGHT_PURPLE + JCR.instance.config.endsWith);
+        UChat.chat(ChatColor.BLUE + "Contains: " + ChatColor.LIGHT_PURPLE + JCR.instance.config.contains);
+        UChat.chat(ChatColor.BLUE + "Equals: " + ChatColor.LIGHT_PURPLE + JCR.instance.config.equals);
+        UChat.chat(ChatColor.BLUE + "Per Word Triggers: ");
+        UChat.chat(ChatColor.BLUE + "Starts: " + ChatColor.LIGHT_PURPLE + JCR.instance.config.startsWithWords);
+        UChat.chat(ChatColor.BLUE + "Ends: " + ChatColor.LIGHT_PURPLE + JCR.instance.config.endsWithWords);
+        UChat.chat(ChatColor.BLUE + "Contains: " + ChatColor.LIGHT_PURPLE + JCR.instance.config.containsWords);
+        UChat.chat(ChatColor.BLUE + "Equals: " + ChatColor.LIGHT_PURPLE + JCR.instance.config.equalsWords);
     }
 
-    @SubCommand(value = "seconds", description = "Toggle the amount of seconds it takes to chat report automatically.")
-    public void setSeconds(int seconds) {
-        JCR.instance.config.confirmSeconds = seconds;
-        JCR.instance.writeData();
-        EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "Time was set to " + ChatColor.GOLD + seconds + ChatColor.BLUE + " seconds!");
-    }
-
-    @SubCommand(value = "add", description = "Add a word to the list")
-    public void addWord(String type, String mode, @Greedy String word) {
+    @SubCommand(description = "Add a word to the list")
+    private static void add(@Description(autoCompletesTo = {"whole", "words"}) String type, @Description(autoCompletesTo = {"starts", "ends", "contains", "equals"}) String mode, @Greedy String word) {
         if (!word.trim().isEmpty()) {
             switch (type) {
                 case "whole":
@@ -38,13 +38,13 @@ public class JCRCommand extends Command {
                     handleAddWords(mode, word);
                     break;
                 default:
-                    EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.RED + "Invalid type! Available types are:" + ChatColor.BLUE + "[whole, words]");
+                    UChat.chat(ChatColor.RED + "Invalid type! Available types are:" + ChatColor.BLUE + "[whole, words]");
             }
         }
     }
 
-    @SubCommand(value = "remove", description = "Remove a word from the list")
-    public void removeWord(String type, String mode, @Greedy String word) {
+    @SubCommand(description = "Remove a word from the list")
+    private static void remove(@Description(autoCompletesTo = {"whole", "words"}) String type, @Description(autoCompletesTo = {"starts", "ends", "contains", "equals"}) String mode, @Greedy String word) {
         if (!word.trim().isEmpty()) {
             switch (type) {
                 case "whole":
@@ -54,12 +54,28 @@ public class JCRCommand extends Command {
                     handleRemoveWords(mode, word);
                     break;
                 default:
-                    EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.RED + "Invalid type! Available types are:" + ChatColor.BLUE + "[whole, words]");
+                    UChat.chat(ChatColor.RED + "Invalid type! Available types are:" + ChatColor.BLUE + "[whole, words]");
             }
         }
     }
 
-    private void handleRemoveWhole(String mode, String word) {
+    @SubCommand(description = "Clear the list")
+    private static void clear() {
+        UChat.chat(ChatColor.GREEN + "Clearing:");
+        print();
+        JCR.instance.config.startsWith.clear();
+        JCR.instance.config.endsWith.clear();
+        JCR.instance.config.contains.clear();
+        JCR.instance.config.equals.clear();
+        JCR.instance.config.startsWithWords.clear();
+        JCR.instance.config.endsWithWords.clear();
+        JCR.instance.config.containsWords.clear();
+        JCR.instance.config.equalsWords.clear();
+        JCR.instance.config.save();
+        UChat.chat(ChatColor.GREEN + "Cleared the list!");
+    }
+
+    private static void handleRemoveWhole(String mode, String word) {
         boolean succeeded;
         switch (mode) {
             case "starts":
@@ -75,18 +91,18 @@ public class JCRCommand extends Command {
                 succeeded = JCR.instance.config.equals.remove(word);
                 break;
             default:
-                EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.RED + "Invalid type! Available types are:" + ChatColor.BLUE + "[starts, ends, contains, equals]");
+                UChat.chat(ChatColor.RED + "Invalid type! Available types are:" + ChatColor.BLUE + "[starts, ends, contains, equals]");
                 return;
         }
         if (succeeded) {
-            JCR.instance.writeData();
-            EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "The phrase " + ChatColor.LIGHT_PURPLE + word + ChatColor.BLUE + " was removed!");
+            JCR.instance.config.save();
+            UChat.chat(ChatColor.BLUE + "The phrase " + ChatColor.LIGHT_PURPLE + word + ChatColor.BLUE + " was removed!");
         } else {
-            EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.RED + "The phrase " + ChatColor.LIGHT_PURPLE + word + ChatColor.RED + " does not exist!");
+            UChat.chat(ChatColor.RED + "The phrase " + ChatColor.LIGHT_PURPLE + word + ChatColor.RED + " does not exist!");
         }
     }
 
-    private void handleRemoveWords(String mode, String word) {
+    private static void handleRemoveWords(String mode, String word) {
         boolean succeeded;
         switch (mode) {
             case "starts":
@@ -102,18 +118,18 @@ public class JCRCommand extends Command {
                 succeeded = JCR.instance.config.equalsWords.remove(word);
                 break;
             default:
-                EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.RED + "Invalid type! Available types are:" + ChatColor.BLUE + "[starts, ends, contains, equals]");
+                UChat.chat(ChatColor.RED + "Invalid type! Available types are:" + ChatColor.BLUE + "[starts, ends, contains, equals]");
                 return;
         }
         if (succeeded) {
-            JCR.instance.writeData();
-            EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "The phrase " + ChatColor.LIGHT_PURPLE + word + ChatColor.BLUE + " was removed!");
+            JCR.instance.config.save();
+            UChat.chat(ChatColor.BLUE + "The phrase " + ChatColor.LIGHT_PURPLE + word + ChatColor.BLUE + " was removed!");
         } else {
-            EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.RED + "The phrase " + ChatColor.LIGHT_PURPLE + word + ChatColor.RED + " does not exist!");
+            UChat.chat(ChatColor.RED + "The phrase " + ChatColor.LIGHT_PURPLE + word + ChatColor.RED + " does not exist!");
         }
     }
 
-    private void handleAddWhole(String mode, String word) {
+    private static void handleAddWhole(String mode, String word) {
         boolean succeeded;
         switch (mode) {
             case "starts":
@@ -129,18 +145,18 @@ public class JCRCommand extends Command {
                 succeeded = JCR.instance.config.equals.add(word);
                 break;
             default:
-                EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.RED + "Invalid type! Available types are:" + ChatColor.BLUE + "[starts, ends, contains, equals]");
+                UChat.chat(ChatColor.RED + "Invalid type! Available types are:" + ChatColor.BLUE + "[starts, ends, contains, equals]");
                 return;
         }
         if (succeeded) {
-            JCR.instance.writeData();
-            EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "The phrase " + ChatColor.LIGHT_PURPLE + word + ChatColor.BLUE + " was added!");
+            JCR.instance.config.save();
+            UChat.chat(ChatColor.BLUE + "The phrase " + ChatColor.LIGHT_PURPLE + word + ChatColor.BLUE + " was added!");
         } else {
-            EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.RED + "The phrase " + ChatColor.LIGHT_PURPLE + word + ChatColor.RED + " already exists!");
+            UChat.chat(ChatColor.RED + "The phrase " + ChatColor.LIGHT_PURPLE + word + ChatColor.RED + " already exists!");
         }
     }
 
-    private void handleAddWords(String mode, String word) {
+    private static void handleAddWords(String mode, String word) {
         boolean succeeded;
         switch (mode) {
             case "starts":
@@ -156,30 +172,14 @@ public class JCRCommand extends Command {
                 succeeded = JCR.instance.config.equalsWords.add(word);
                 break;
             default:
-                EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.RED + "Invalid type! Available types are:" + ChatColor.BLUE + "[starts, ends, contains, equals]");
+                UChat.chat(ChatColor.RED + "Invalid type! Available types are:" + ChatColor.BLUE + "[starts, ends, contains, equals]");
                 return;
         }
         if (succeeded) {
-            JCR.instance.writeData();
-            EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "The phrase " + ChatColor.LIGHT_PURPLE + word + ChatColor.BLUE + " was added!");
+            JCR.instance.config.save();
+            UChat.chat(ChatColor.BLUE + "The phrase " + ChatColor.LIGHT_PURPLE + word + ChatColor.BLUE + " was added!");
         } else {
-            EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.RED + "The phrase " + ChatColor.LIGHT_PURPLE + word + ChatColor.RED + " already exists!");
+            UChat.chat(ChatColor.RED + "The phrase " + ChatColor.LIGHT_PURPLE + word + ChatColor.RED + " already exists!");
         }
-    }
-
-    @SubCommand(value = "print", description = "Print the values of the config.")
-    public void print() {
-        EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "Enabled: " + (JCR.instance.config.enabled ? ChatColor.GREEN + "True" : ChatColor.RED + "False"));
-        EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "Seconds to Confirm: " + ChatColor.GOLD + JCR.instance.config.confirmSeconds);
-        EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "Whole Triggers: ");
-        EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "Starts: " + ChatColor.LIGHT_PURPLE + JCR.instance.config.startsWith);
-        EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "Ends: " + ChatColor.LIGHT_PURPLE + JCR.instance.config.endsWith);
-        EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "Contains: " + ChatColor.LIGHT_PURPLE + JCR.instance.config.contains);
-        EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "Equals: " + ChatColor.LIGHT_PURPLE + JCR.instance.config.equals);
-        EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "Per Word Triggers: ");
-        EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "Starts: " + ChatColor.LIGHT_PURPLE + JCR.instance.config.startsWithWords);
-        EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "Ends: " + ChatColor.LIGHT_PURPLE + JCR.instance.config.endsWithWords);
-        EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "Contains: " + ChatColor.LIGHT_PURPLE + JCR.instance.config.containsWords);
-        EssentialAPI.getMinecraftUtil().sendMessage("", ChatColor.BLUE + "Equals: " + ChatColor.LIGHT_PURPLE + JCR.instance.config.equalsWords);
     }
 }

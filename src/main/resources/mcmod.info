@@ -4,7 +4,7 @@
     "name": "${name}",
     "description": "JCR",
     "version": "${version}",
-    "mcversion": "${mcversion}",
+    "mcversion": "${mcVersionStr}",
     "url": "",
     "updateUrl": "",
     "authorList": [
