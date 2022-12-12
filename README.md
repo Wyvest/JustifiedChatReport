@@ -2,7 +2,7 @@
 
 ### This is not associated with Polyfrost or Justified (not really sure what Justified is either) and is my own work.
 
-A commissioned (for $0, I'm not scamming someone for a mod I made in a day) mod for iyda /
+A commission (for $0, I'm not scamming someone for a mod I made in a day) mod for iyda /
 Justified (hence the name).
 
 ## Features
